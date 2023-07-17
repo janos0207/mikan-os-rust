@@ -1,0 +1,11 @@
+[package]
+name = "loader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+uefi = "0.23"
+uefi-raw = { path = "../uefi-raw" }
+
+# [patch.crates-io]
+# uefi-raw = { path = "../uefi-raw" }
