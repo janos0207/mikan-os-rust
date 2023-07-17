@@ -1,0 +1,21 @@
+[package]
+name = "uefi-raw"
+version = "0.2.0"
+readme = "README.md"
+description = "Raw UEFI types"
+
+authors = ["The Rust OSDev team"]
+categories = ["embedded", "no-std", "api-bindings"]
+edition = "2021"
+keywords = ["uefi", "efi"]
+license = "MPL-2.0"
+repository = "https://github.com/rust-osdev/uefi-rs"
+rust-version = "1.68"
+
+[dependencies]
+bitflags = "2.0.0"
+ptr_meta = { version = "0.2.0", default-features = false }
+uguid = "2.0.0"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
