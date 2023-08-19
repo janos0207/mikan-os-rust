@@ -4,6 +4,7 @@ use uguid::Guid;
 
 type Char16 = u16;
 
+#[repr(C)]
 pub struct FileProtocol {
     pub revision: u64,
     pub open: unsafe extern "efiapi" fn(
@@ -42,6 +43,8 @@ pub struct FileProtocol {
     pub flush: extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 struct FileIoToken {
     pub event: Event,
     pub status: Status,
