@@ -4,14 +4,24 @@
 #[macro_use]
 extern crate alloc;
 
-// use uefi::proto::media::file::RegularFile;
-
-use uefi_raw::table::boot::{BootServices, MemoryDescriptor};
+use uefi_raw::protocol::loaded_image::LoadedImageProtocol;
+use uefi_raw::table::boot::MemoryDescriptor;
 use uefi_raw::table::system::SystemTable;
 use uefi_raw::{Handle, Status};
 
 use alloc::vec::Vec;
+use core::ffi::c_void;
 use core::panic::PanicInfo;
+use core::ptr;
+
+mod attribute;
+use attribute::OpenProtocolAttributes;
+
+pub mod file_protocol;
+use file_protocol::FileProtocol;
+
+mod simple_file_system_protocol;
+use simple_file_system_protocol::SimpleFileSystemProtocol;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 struct MemoryMapKey(usize);
@@ -44,6 +54,39 @@ fn GetMemoryMap(map: &MemoryMap, mut system_table: SystemTable) -> Status {
     }
 }
 
+fn OpenRootDir(
+    _image_handle: Handle,
+    root: &mut *mut FileProtocol,
+    mut system_table: SystemTable,
+) -> Status {
+    let bs = system_table.boot_services;
+    let mut loaded_image = ptr::null_mut::<LoadedImageProtocol>();
+    let mut fs = ptr::null_mut::<SimpleFileSystemProtocol>();
+
+    unsafe {
+        ((*bs).open_protocol)(
+            _image_handle,                      // image_handle
+            &LoadedImageProtocol::GUID,         // GUID
+            &mut loaded_image.cast::<c_void>(), //loaded_image
+            _image_handle,                      //NULL
+            ptr::null_mut::<c_void>(),
+            OpenProtocolAttributes::ByHandleProtocol as u32, // EFI_OPEN
+        );
+        ((*bs).open_protocol)(
+            (*loaded_image).device_handle,   // image_handle
+            &SimpleFileSystemProtocol::GUID, // GUID
+            &mut fs.cast::<c_void>(),        //loaded_image
+            _image_handle,                   //NULL
+            ptr::null_mut::<c_void>(),
+            OpenProtocolAttributes::ByHandleProtocol as u32, // EFI_OPEN
+        );
+
+        ((*fs).open_volume)(fs, root);
+    }
+
+    Status::SUCCESS
+}
+
 fn main(_image_handle: Handle, mut system_table: SystemTable) -> Status {
     let mut buffer: Vec<u8> = vec![0; 4096 * 4];
     let mut map_size = buffer.len();
@@ -60,6 +103,8 @@ fn main(_image_handle: Handle, mut system_table: SystemTable) -> Status {
         descriptor_version: &mut descriptor_version,
     };
     GetMemoryMap(&memmap, system_table);
+
+    // let root = ptr::null_mut::<FileProtocol>();
 
     Status::SUCCESS
 }
